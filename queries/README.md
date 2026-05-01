@@ -19,4 +19,7 @@ Es gibt verschiedene README-Dateien, je nach Aufgaben oder Hintergrund der Infor
 ---
 
 ## Inhaltsverzeichnis
+- SQL-Datenbank schreibgeschützt zu machen
+- SQL TempDB grösse ermitteln
+- tempdb plötzlich voll und muss handeln
 
