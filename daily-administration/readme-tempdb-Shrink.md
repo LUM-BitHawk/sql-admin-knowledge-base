@@ -1,36 +1,39 @@
+# Export-MSSQLEventlog
 
-# tempdb plötzlich voll und muss handeln
+## Zweck
 
-Wenn die tempdb im SQL Server plötzlich voll ist, führt dies meist zum Abbruch von Abfragen. 
+Exportiert alle Einträge aus dem Windows Application-Eventlog, deren Quelle mit `MSSQL*` beginnt, in eine CSV-Datei. Dient zur schnellen Analyse von SQL-Server-Fehlern und -Warnungen außerhalb der Event Viewer.
 
-```sql
-USE master;
-GO
-ALTER DATABASE tempdb MODIFY FILE ( NAME = templog, SIZE = 7GB, FILEGROWTH = 0 );
-ALTER DATABASE tempdb MODIFY FILE ( NAME = tempdev, SIZE = 7GB, FILEGROWTH = 0 );
-ALTER DATABASE tempdb MODIFY FILE ( NAME = temp2, SIZE = 7GB, FILEGROWTH = 0 );
-ALTER DATABASE tempdb MODIFY FILE ( NAME = temp3, SIZE = 7GB, FILEGROWTH = 0 );
-ALTER DATABASE tempdb MODIFY FILE ( NAME = temp4, SIZE = 7GB, FILEGROWTH = 0 );
+## Befehl
+
+```powershell
+Get-EventLog -LogName Application |
+    Where-Object { $_.Source -like "MSSQL*" } |
+    Export-Csv -Path C:\Temp\msql_error.csv -Delimiter ";" -NoTypeInformation
 ```
 
+## Ablauf
 
-Temp DB Abfragen
+1. **Get-EventLog** – Liest sämtliche Einträge aus dem Log *Application*.
+2. **Where-Object** – Filtert auf Quellen, die mit `MSSQL` beginnen (z. B. `MSSQLSERVER`, `MSSQL$InstanceName`).
+3. **Export-Csv** – Schreibt die Ergebnisse als CSV mit Semikolon-Trennung nach `C:\Temp\msql_error.csv`.
 
-```sql
-SELECT name AS file_name,
-       type_desc AS file_type,
-       size * 8.0 / 1024 AS size_mb,
-       max_size * 8.0 / 1024 AS max_size_mb,
-       CAST(IIF(max_size = 0, 0, 1) AS bit) AS is_autogrowth_enabled,
-       CASE WHEN growth = 0 THEN growth
-            WHEN growth > 0 AND is_percent_growth = 0 THEN growth * 8.0 / 1024
-            WHEN growth > 0 AND is_percent_growth = 1 THEN growth
-       END
-       AS growth_increment_value,
-       CASE WHEN growth = 0 THEN 'Autogrowth is disabled.'
-            WHEN growth > 0 AND is_percent_growth = 0  THEN 'Megabytes'
-            WHEN growth > 0 AND is_percent_growth = 1  THEN 'Percent'
-       END
-       AS growth_increment_value_unit
-FROM tempdb.sys.database_files;
-```
+## Voraussetzungen
+
+- Windows PowerShell 5.1 oder höher
+- Lokale **Administrator-Rechte** (Eventlog-Lesezugriff)
+- Zielverzeichnis `C:\Temp` muss existieren
+
+## Ausgabe
+
+| Datei | Format | Trennzeichen |
+|---|---|---|
+| `C:\Temp\msql_error.csv` | CSV (UTF-8) | `;` |
+
+Die CSV enthält u. a. die Spalten `TimeGenerated`, `EntryType`, `Source`, `EventID` und `Message`.
+
+## Hinweise
+
+- `Get-EventLog` ist auf klassische Windows-Logs beschränkt. Für neuere Logs alternativ `Get-WinEvent` verwenden.
+- Bei großen Logs kann der Befehl langsam sein – optional mit `-Newest 500` die Anzahl begrenzen.
+- `-NoTypeInformation` unterdrückt die PowerShell-Typzeile in der ersten Zeile der CSV.
