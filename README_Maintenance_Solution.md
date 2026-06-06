@@ -20,20 +20,6 @@ Die **SQL Server Maintenance Solution** von Ola Hallengren ist eine preisgekrön
 
 ---
 
-## Installation
-
-```sql
--- 1. Skript herunterladen und auf dem SQL Server ausführen:
---    https://ola.hallengren.com/scripts/MaintenanceSolution.sql
---
--- Das Skript erstellt automatisch:
---   - Alle drei Stored Procedures (dbo.DatabaseBackup, dbo.DatabaseIntegrityCheck, dbo.IndexOptimize)
---   - Die Logging-Tabelle dbo.CommandLog
---   - Vorkonfigurierte SQL Agent Jobs (T-SQL-Jobschritte für SQL Server 2017+)
-```
-
----
-
 ## 1. DatabaseBackup – Datenbanksicherung
 
 Führt vollständige, differenzielle oder Transaktionslog-Backups durch. Unterstützt lokale Verzeichnisse, Netzwerkfreigaben, Azure Blob Storage und AWS S3.
